@@ -1,0 +1,60 @@
+{
+  "id": 23,
+  "assign_id": 19,
+  "works": [
+    {
+      "work": "profile",
+      "case_work_id": null,
+      "questionnaire": []
+    },
+    {
+      "work": "driver",
+      "case_work_id": "driver9656521221232025-07-24 04:11:52",
+      "executive_id": 4,
+      "questionnaire": {
+        "what_is_the_drivers_contact_number": {
+          "name": "what_is_the_drivers_contact_number",
+          "data": "9961242776"
+        }
+       
+      }
+    },
+    {
+      "work": "garage",
+      "case_work_id": "garage9656521221232025-07-24 04:11:52",
+     "executive_id": 4,
+      "questionnaire": {
+        "what_is_the_name_of_the_garage": {
+          "name": "what_is_the_name_of_the_garage",
+          "data": "Garage786"
+        }
+        
+      }
+    },
+    {
+      "work": "spot",
+      "case_work_id": "spot9656521221232025-07-24 04:11:52",
+        "executive_id": 4,
+      "questionnaire": {
+        "were_any_traffic_signals_nearby": {
+          "name": "were_any_traffic_signals_nearby",
+          "data": "1"
+        }
+      
+      }
+    },
+    {
+      "work": "meeting",
+      "case_work_id": "meeting9656521221232025-07-24 04:11:52",
+      "executive_id": 4,
+      "questionnaire": {
+        "date_of_the_meeting": {
+          "name": "date_of_the_meeting",
+          "data": "2025-01-12"
+        }
+           
+      }
+    }
+    
+  ]
+}
