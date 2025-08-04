@@ -107,6 +107,8 @@ if (!Schema::hasTable($oldTableName)) {
     Schema::create($oldTableName, function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('assign_work_id')->nullable(); // 👈 Add this line
+        $table->unsignedBigInteger('executive_id')->nullable(); // 👈 Add this line
+
         $table->timestamps();
     });
 }
