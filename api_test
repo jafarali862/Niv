@@ -1,0 +1,169 @@
+
+API/CaseController
+public function storequestion(Request $request)
+{
+    if (!Auth::check()) 
+    {
+    return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $userId = Auth::user()->id;
+    $data = $request->all();
+
+    if (!isset($data['id']) || !isset($data['works'])) 
+    {
+    return response()->json(['error' => 'Invalid data'], 422);
+    }
+
+    $submission = new QuestionnaireSubmission();
+    $submission->case_id   = $data['id'];
+    // $submission->user_id   = $userId;
+    $submission->full_data = json_encode($data);
+    $submission->save();
+
+    DB::table('case_assignments')
+        ->where('id', $submission->case_id)
+        ->update(['status' => 2]);
+
+  $workToTableMap = [
+    'driver'   => 'driver_data',
+    'garage'   => 'garage_data',
+    'meeting'  => 'owner_data',
+    'spot'     => 'spot_data',
+    'accident' => 'accident_person_data',
+];
+
+foreach ($data['works'] as $workItem) {
+    if (!isset($workItem['work'], $workItem['questionnaire'])) {
+        continue;
+    }
+
+    $workType = $workItem['work'];
+    $questionnaire = $workItem['questionnaire'];
+    $assignWorkId = $data['assign_id'];
+    $executiveId = $workItem['executive_id'] ?? null;
+    $table = $workToTableMap[$workType] ?? ($workType . '_data');
+
+    $insertData = [
+        'assign_work_id' => $assignWorkId,
+        'executive_id'   => $executiveId,
+        'created_at'     => now(),
+        'updated_at'     => now(),
+    ];
+
+    // Process questionnaire fields (supports both flat and indexed array)
+    foreach ($questionnaire as $field) {
+        if (isset($field['name']) && array_key_exists('data', $field)) {
+            $insertData[$field['name']] = is_array($field['data'])
+                ? json_encode($field['data'])
+                : $field['data'];
+        }
+    }
+
+    if (Schema::hasTable($table)) {
+        DB::table($table)->insert($insertData); // main table
+
+        // Also insert into _old table
+        $oldTable = $table . '_old';
+        if (Schema::hasTable($oldTable)) {
+            DB::table($oldTable)->insert($insertData);
+        }
+    }
+}
+
+
+   return response()->json(['status' => 'success', 'id' => $submission->id]);
+}
+
+
+
+companycontroler.php
+
+
+  public function store_question(Request $request)
+    {
+    $validated = $request->validate([
+    'question' => 'required|string|max:255',
+    'input_type' => 'required|in:text,textarea,select,file,date',
+    'data_category' => 'required|in:garage_data,spot_data,owner_data,driver_data,accident_person_data',
+    'file_type' => 'required_if:input_type,file|in:image,audio|nullable|string',
+
+    ]);
+ $question = $validated['question'];
+    $inputType = $validated['input_type'];
+    $dataCategory = $validated['data_category'];
+    $fileType = $request['file_type'];
+    $tableName = $dataCategory;
+    $oldTableName = $tableName . '_old';
+
+if (!Schema::hasTable($tableName)) {
+    Schema::create($tableName, function (Blueprint $table) {
+        $table->id();
+        $table->timestamps();
+    });
+}
+
+if (!Schema::hasTable($oldTableName)) {
+    Schema::create($oldTableName, function (Blueprint $table) {
+        $table->id();
+        $table->unsignedBigInteger('assign_work_id')->nullable(); // 👈 Add this line
+        $table->timestamps();
+    });
+}
+ $columnName = Str::slug($question, '_');
+
+    foreach ([$tableName, $oldTableName] as $table) 
+    {
+    if (!Schema::hasColumn($table, $columnName)) 
+    {
+    Schema::table($table, function (Blueprint $table) use ($columnName, $inputType) 
+    {
+    switch ($inputType) 
+    {
+    case 'text':
+    $table->string($columnName)->nullable();
+    break;
+    case 'textarea':
+    $table->text($columnName)->nullable();
+    break;
+    case 'select':
+    $table->string($columnName)->nullable();
+    break;
+    case 'file':
+    $table->string($columnName)->nullable();
+    break;
+    case 'date':
+    $table->date($columnName)->nullable();
+    break;
+    }
+    });
+    }
+    }
+    
+    do 
+    {
+    $uniqueKey = '#' . strtoupper(Str::random(5)) . rand(10, 99);
+    } 
+    while (Question::where('unique_key', $uniqueKey)->exists());
+
+    // Save question
+    Question::create([
+        'question'          => $question,
+        'input_type'        => $inputType,
+        'data_category'     => $dataCategory,
+        'column_name'       => $columnName,
+        'unique_key'       => $uniqueKey,
+        'file_type'         => $fileType,
+        
+    ]);
+
+    return response()->json(['success' => 'Questionnaire added successfully']);
+    }
+
+
+
+
+
+
+
+
